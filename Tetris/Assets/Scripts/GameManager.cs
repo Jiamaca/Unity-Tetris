@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour{
 
-    private IEnumerator coroutine;
+/*    private IEnumerator coroutine;
 
     private Tetromino[] tetrominos;
     private Block[,] matrix;
@@ -53,6 +53,7 @@ public class GameManager : MonoBehaviour{
             Debug.Log("Updating Tiles... ");
 
             UpdatePositions();
+
             UpdateTiles();
 
         }
@@ -92,6 +93,6 @@ public class GameManager : MonoBehaviour{
                 blockInstance.transform.SetParent(tilesPivot.transform);
             }
         }
-    }
+    }*/
 }   
 
