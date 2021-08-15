@@ -14,6 +14,17 @@ public class Tetromino : MonoBehaviour
 
     private static Transform[,] tilesMatrix = new Transform[tileCollumns, tileRows];
 
+    private AudioSource source;
+
+    public AudioClip rotateSound;
+    public AudioClip moveSound;
+    public AudioClip clearSound;
+
+    void Start()
+    {
+        source = GetComponent<AudioSource>();
+    }
+
     public void Update()
     {
         if (freezed) return;
@@ -29,6 +40,7 @@ public class Tetromino : MonoBehaviour
             if (CanMove(newPosition))
             {
                 transform.position = newPosition;
+                PlayMoveSound();
             } else
             {
                 freezed = true;
@@ -37,7 +49,13 @@ public class Tetromino : MonoBehaviour
 
                 CheckLine();
 
-                GameManager.Main.SpawnTetromino();
+                if (transform.position.y >= GameManager.Main.spawnPosition.y)
+                {
+                    GameManager.Main.GameOver();
+                } else
+                {
+                    GameManager.Main.SpawnTetromino();
+                }
             }
 
             previousTime = Time.time;
@@ -48,21 +66,26 @@ public class Tetromino : MonoBehaviour
 
     private void Move()
     {
+        bool hasPressedKey = false;
+
         Vector3 newPosition = transform.position;
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             newPosition += Vector3.left;
+            hasPressedKey = true;
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             newPosition += Vector3.right;
+            hasPressedKey = true;
         }
 
-        if (CanMove(newPosition))
+        if (CanMove(newPosition) && hasPressedKey)
         {
             transform.position = newPosition;
+            PlayMoveSound();
         }
     }
 
@@ -91,26 +114,31 @@ public class Tetromino : MonoBehaviour
 
     private void Rotate()
     {
+        bool hasPressedKey = false;
+
         Quaternion newRotation = transform.rotation;
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
             newRotation = Quaternion.Euler(0, 0, 90);
+            hasPressedKey = true;
         }
 
         if (Input.GetKeyDown(KeyCode.E))
         {
             newRotation = Quaternion.Euler(0, 0, -90);
+            hasPressedKey = true;
         }
 
 
-        if (CanRotate(newRotation))
+        if (CanRotate(newRotation) && hasPressedKey == true)
         {
             foreach (Transform child in transform)
             {
                 Vector3 newBlockPosition = newRotation * child.localPosition;
                 child.transform.localPosition = newBlockPosition;
             }
+            PlayRotateSound();
         }
     }
 
@@ -139,8 +167,10 @@ public class Tetromino : MonoBehaviour
 
     private void AddChildsToMatrix()
     {
-        foreach (Transform child in transform)
+        for (int i = 0; i < transform.childCount; i++)
         {
+            Transform child = transform.GetChild(i);
+
             int positionX = Mathf.RoundToInt(child.position.x);
             int positionY = Mathf.RoundToInt(child.position.y);
 
@@ -150,6 +180,7 @@ public class Tetromino : MonoBehaviour
 
     private void CheckLine()
     {
+        int currentSequence = 0;
         for (int i = 0; i < tileRows; i++)
         {
             bool isComplete = true;
@@ -165,16 +196,29 @@ public class Tetromino : MonoBehaviour
             {
                 ClearLine(i);
                 RowDown(i);
+
+                currentSequence++;
+                i--;
             }
         }
+
+        if (currentSequence > 0)
+        {
+            Pontuate(currentSequence);
+            PlayClearSound();
+        }
+
     }
 
     private void ClearLine(int line)
     {
         for (int col = 0; col < tileCollumns; col++)
         {
-            GameObject go = tilesMatrix[col, line].gameObject;
-            Destroy(go);
+            GameObject tileObject = tilesMatrix[col, line].gameObject;
+
+            Destroy(tileObject);
+
+            tilesMatrix[col, line] = null;
         }
     }
 
@@ -189,9 +233,9 @@ public class Tetromino : MonoBehaviour
                 Transform t = tilesMatrix[j, i];
                 if (t != null)
                 {
-                    tilesMatrix[j, i+1] = t;
+                    tilesMatrix[j, i-1] = t;
                     tilesMatrix[j, i] = null;
-                    tilesMatrix[j, i+1].transform.position += Vector3.down;
+                    tilesMatrix[j, i-1].transform.position += Vector3.down;
                 }
             }
         }
@@ -203,5 +247,37 @@ public class Tetromino : MonoBehaviour
         int newPositionY = Mathf.RoundToInt(transform.position.y);
 
         transform.position = new Vector3(newPositionX, newPositionY, 0);
+    }
+
+    void PlayRotateSound()
+    {
+        source.clip = rotateSound;
+        source.Play();
+    }
+
+    void PlayClearSound()
+    {
+        source.clip = clearSound;
+        source.Play();
+    }
+
+    void PlayMoveSound()
+    {
+        source.clip = moveSound;
+        source.Play();
+    }
+
+    void Pontuate(int sequence)
+    {
+        int totalPoints = 0;
+        switch(sequence)
+        {
+            case 1: totalPoints = 40; break;
+            case 2: totalPoints = 100; break;
+            case 3: totalPoints = 300; break;
+            case 4: totalPoints = 400; break;
+        }
+
+        GameManager.Main.AddScore(totalPoints);
     }
 }
