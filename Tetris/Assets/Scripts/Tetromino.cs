@@ -4,25 +4,34 @@ using UnityEngine;
 
 public class Tetromino : MonoBehaviour 
 {
-    public float fallTime = 0.8f;
 
-    private float previousTime = 0;
-    private bool freezed = false;
+    public Vector3 massCenter;
+
+    public float moveInterval = 0.25f;
+    public float fallTime = 0.8f;
 
     public static int tileRows = 21;
     public static int tileCollumns = 10;
-
-    private static Transform[,] tilesMatrix = new Transform[tileCollumns, tileRows];
-
-    private AudioSource source;
 
     public AudioClip rotateSound;
     public AudioClip moveSound;
     public AudioClip clearSound;
 
+    private static Transform[,] tilesMatrix = new Transform[tileCollumns, tileRows];
+
+    private bool freezed = false;
+
+    private float previousTime = 0;
+
+    private GameObject tilesGroup;
+
+    private GameManager gameManager = GameManager.Main;
+
+    private Coroutine delayedMoveRoutine;
+
     void Start()
     {
-        source = GetComponent<AudioSource>();
+        tilesGroup = GameObject.Find("/Blocks");
     }
 
     public void Update()
@@ -40,7 +49,7 @@ public class Tetromino : MonoBehaviour
             if (CanMove(newPosition))
             {
                 transform.position = newPosition;
-                PlayMoveSound();
+                gameManager.PlayAudioClip(moveSound);
             } else
             {
                 freezed = true;
@@ -64,8 +73,14 @@ public class Tetromino : MonoBehaviour
         SnapToGrid();
     }
 
+    public void OnDrawGizmos()
+    {
+        Gizmos.DrawIcon(massCenter + transform.position, "Light Gizmo.tiff");
+    }
+
     private void Move()
     {
+
         bool hasPressedKey = false;
 
         Vector3 newPosition = transform.position;
@@ -74,18 +89,54 @@ public class Tetromino : MonoBehaviour
         {
             newPosition += Vector3.left;
             hasPressedKey = true;
+            delayedMoveRoutine = StartCoroutine(DelayedMove(moveInterval));
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
             newPosition += Vector3.right;
             hasPressedKey = true;
+            delayedMoveRoutine = StartCoroutine(DelayedMove(moveInterval));
         }
 
-        if (CanMove(newPosition) && hasPressedKey)
+        if (delayedMoveRoutine != null && (Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A))) {
+            StopCoroutine(delayedMoveRoutine);
+        }
+
+        if (hasPressedKey && CanMove(newPosition))
         {
             transform.position = newPosition;
-            PlayMoveSound();
+            gameManager.PlayAudioClip(moveSound);
+        }
+    }
+
+    private IEnumerator DelayedMove(float waitTime)
+    {
+        while (!freezed)
+        {
+            yield return new WaitForSeconds(waitTime);
+
+            bool hasPressedKey = false;
+
+            Vector3 newPosition = transform.position;
+
+            if (Input.GetKey(KeyCode.A))
+            {
+                newPosition += Vector3.left;
+                hasPressedKey = true;
+            }
+
+            if (Input.GetKey(KeyCode.D))
+            {
+                newPosition += Vector3.right;
+                hasPressedKey = true;
+            }
+
+            if (hasPressedKey && CanMove(newPosition))
+            {
+                transform.position = newPosition;
+                gameManager.PlayAudioClip(moveSound);
+            }
         }
     }
 
@@ -131,14 +182,14 @@ public class Tetromino : MonoBehaviour
         }
 
 
-        if (CanRotate(newRotation) && hasPressedKey == true)
+        if (hasPressedKey && CanRotate(newRotation))
         {
             foreach (Transform child in transform)
             {
                 Vector3 newBlockPosition = newRotation * child.localPosition;
                 child.transform.localPosition = newBlockPosition;
             }
-            PlayRotateSound();
+            gameManager.PlayAudioClip(rotateSound);
         }
     }
 
@@ -146,7 +197,7 @@ public class Tetromino : MonoBehaviour
     {
         foreach (Transform child in transform)
         {
-            Vector3 newBlockPosition = (newRotation * child.localPosition) + transform.position;
+            Vector3 newBlockPosition = newRotation * child.localPosition + transform.position;
 
             int newPositionX = Mathf.RoundToInt(newBlockPosition.x);
             int newPositionY = Mathf.RoundToInt(newBlockPosition.y);
@@ -167,7 +218,7 @@ public class Tetromino : MonoBehaviour
 
     private void AddChildsToMatrix()
     {
-        for (int i = 0; i < transform.childCount; i++)
+        for (int i = transform.childCount - 1; i >= 0; i--)
         {
             Transform child = transform.GetChild(i);
 
@@ -175,7 +226,10 @@ public class Tetromino : MonoBehaviour
             int positionY = Mathf.RoundToInt(child.position.y);
 
             tilesMatrix[positionX, positionY] = child;
+            child.parent = tilesGroup.transform;
         }
+
+        Destroy(gameObject);
     }
 
     private void CheckLine()
@@ -205,7 +259,8 @@ public class Tetromino : MonoBehaviour
         if (currentSequence > 0)
         {
             Pontuate(currentSequence);
-            PlayClearSound();
+            gameManager.PlayAudioClip(clearSound);
+
         }
 
     }
@@ -228,8 +283,6 @@ public class Tetromino : MonoBehaviour
         {
             for (int j = 0; j < tileCollumns; j++)
             {
-                Debug.Log("i = " + i + " j = " + j);
-
                 Transform t = tilesMatrix[j, i];
                 if (t != null)
                 {
@@ -247,24 +300,6 @@ public class Tetromino : MonoBehaviour
         int newPositionY = Mathf.RoundToInt(transform.position.y);
 
         transform.position = new Vector3(newPositionX, newPositionY, 0);
-    }
-
-    void PlayRotateSound()
-    {
-        source.clip = rotateSound;
-        source.Play();
-    }
-
-    void PlayClearSound()
-    {
-        source.clip = clearSound;
-        source.Play();
-    }
-
-    void PlayMoveSound()
-    {
-        source.clip = moveSound;
-        source.Play();
     }
 
     void Pontuate(int sequence)

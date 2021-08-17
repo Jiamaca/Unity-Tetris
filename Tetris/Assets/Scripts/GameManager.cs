@@ -20,6 +20,9 @@ public class GameManager : MonoBehaviour
 
     private GameObject gameOverMenu;
     private GameObject currentScoreText;
+    private GameObject nextTetromino;
+
+    private Transform nextTetrominoMiniature;
 
     private AudioSource source;
 
@@ -40,30 +43,46 @@ public class GameManager : MonoBehaviour
         source = GetComponent<AudioSource>();
 
         gameOverMenu = mainCanvas.transform.Find("GameOverMenu").gameObject;
-        currentScoreText = mainCanvas.transform.Find("CurrentScoreText").gameObject;
+        currentScoreText = mainCanvas.transform.Find("ScorePainel/CurrentScoreText").gameObject;
+        nextTetrominoMiniature = GameObject.Find("MiniaturePivot").transform;
 
         SpawnTetromino();
     }
 
     public void SpawnTetromino()
     {
-        int currIndex = Random.Range(0, tetrominos.Count);
-        Instantiate(tetrominos[currIndex], spawnPosition, Quaternion.identity);
+
+        int index = Random.Range(0, tetrominos.Count);
+
+        if (nextTetromino == null) nextTetromino = tetrominos[index];
+
+
+        Instantiate(nextTetromino, spawnPosition, Quaternion.identity);
+
+        if (nextTetrominoMiniature.childCount == 1) Destroy(nextTetrominoMiniature.GetChild(0).gameObject);
+        
+        int nextIndex = Random.Range(0, tetrominos.Count);
+        nextTetromino = tetrominos[nextIndex];
+
+        GameObject miniature = Instantiate(nextTetromino, nextTetrominoMiniature);
+        Tetromino t = miniature.GetComponent<Tetromino>();
+        miniature.transform.localPosition = Vector3.zero - (t.massCenter * 0.85f);
+        miniature.transform.localScale *= 0.85f;
+        t.enabled = false;
     }
 
     public void GameOver()
     {
         Debug.Log("Game Over!");
 
-        source.clip = gameOverSound;
-        source.Play();
+        PlayAudioClip(gameOverSound);
 
         gameOverMenu.SetActive(true);
+        Destroy(nextTetrominoMiniature.gameObject);
 
         Transform gameOverScoreText = gameOverMenu.transform.Find("GameOverPanel/GameOverScoreText");
         TextMeshProUGUI tmp = gameOverScoreText.GetComponent<TextMeshProUGUI>();
-        tmp.SetText(string.Format("SCORE: {0}", score));
-        tmp.text = string.Format("SCORE: {0}", score);
+        tmp.text = score.ToString("000000");
 
     }
 
@@ -79,8 +98,16 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("New Score: " + _score);
         TextMeshProUGUI textMeshPro = currentScoreText.GetComponent<TextMeshProUGUI>();
-        textMeshPro.text = string.Format("SCORE: {0}", score);
 
+        textMeshPro.text = score.ToString("000000");
+    }
+
+    public void PlayAudioClip(AudioClip clip)
+    {
+        if (source.isPlaying && (clip.name != "Line Clear" || clip.name != "Fail")) return;
+
+        source.clip = clip;
+        source.Play();
     }
 }   
 
