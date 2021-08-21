@@ -11,8 +11,8 @@ public class CameraMovment : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float x = -Input.GetAxis("Vertical");
-        float y = Input.GetAxis("Horizontal");
+        float x = -InputHandler.inputAxis.y;
+        float y = InputHandler.inputAxis.x;
 
         transform.rotation = Quaternion.Euler(x * horizontalIntencity, y * verticalIntencity, 0).normalized;
     }

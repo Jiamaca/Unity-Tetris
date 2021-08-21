@@ -1,37 +1,54 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Tetromino : MonoBehaviour 
 {
-
     public Vector3 massCenter;
 
     public float moveInterval = 0.25f;
     public float fallTime = 0.8f;
 
-    public static int tileRows = 21;
-    public static int tileCollumns = 10;
+    //public PlayerInput playerInput;
 
     public AudioClip rotateSound;
     public AudioClip moveSound;
     public AudioClip clearSound;
 
+    public static int tileRows = 21;
+    public static int tileCollumns = 10;
+
     private static Transform[,] tilesMatrix = new Transform[tileCollumns, tileRows];
 
     private bool freezed = false;
+    private bool hasMoved = false;
 
     private float previousTime = 0;
 
     private GameObject tilesGroup;
 
     private GameManager gameManager = GameManager.Main;
+    PlayerActions actions;
 
     private Coroutine delayedMoveRoutine;
 
     void Start()
     {
         tilesGroup = GameObject.Find("/Blocks");
+    }
+
+    private void OnEnable()
+    {
+        actions = new PlayerActions();
+        actions.Enable();
+        actions.PlayerController.Acelerate.performed += OnMovement;
+    }
+
+    private void OnDisable()
+    {
+        actions.PlayerController.Acelerate.performed -= OnMovement;
+        actions.Disable();
     }
 
     public void Update()
@@ -42,7 +59,7 @@ public class Tetromino : MonoBehaviour
 
         Move();
 
-        if (Time.time - previousTime > (Input.GetKey(KeyCode.S) ? fallTime / 10 : fallTime))
+        if (Time.time - previousTime > (InputHandler.inputAxis.y < 0 ? fallTime / 10 : fallTime))
         {
             Vector3 newPosition = transform.position + Vector3.down;
 
@@ -78,35 +95,37 @@ public class Tetromino : MonoBehaviour
         Gizmos.DrawIcon(massCenter + transform.position, "Light Gizmo.tiff");
     }
 
+    public void OnMovement(InputAction.CallbackContext value)
+    {
+        float inputMovement = value.ReadValue<float>();
+    }
+
     private void Move()
     {
-
-        bool hasPressedKey = false;
-
+        float input = InputHandler.inputAxis.x;
+        bool hasPressedKey = input != 0;
         Vector3 newPosition = transform.position;
 
-        if (Input.GetKeyDown(KeyCode.A))
+        if (hasPressedKey && !hasMoved)
         {
-            newPosition += Vector3.left;
-            hasPressedKey = true;
+            hasMoved = true;
+            newPosition += Vector3.right * input;
             delayedMoveRoutine = StartCoroutine(DelayedMove(moveInterval));
+
+            if (CanMove(newPosition))
+            {
+                transform.position = newPosition;
+                gameManager.PlayAudioClip(moveSound);
+            }
         }
 
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            newPosition += Vector3.right;
-            hasPressedKey = true;
-            delayedMoveRoutine = StartCoroutine(DelayedMove(moveInterval));
-        }
+        if (input == 0) {
+            hasMoved = false;
 
-        if (delayedMoveRoutine != null && (Input.GetKeyUp(KeyCode.D) || Input.GetKeyUp(KeyCode.A))) {
-            StopCoroutine(delayedMoveRoutine);
-        }
-
-        if (hasPressedKey && CanMove(newPosition))
-        {
-            transform.position = newPosition;
-            gameManager.PlayAudioClip(moveSound);
+            if (delayedMoveRoutine != null)
+            {
+                StopCoroutine(delayedMoveRoutine);
+            }
         }
     }
 
@@ -116,21 +135,11 @@ public class Tetromino : MonoBehaviour
         {
             yield return new WaitForSeconds(waitTime);
 
-            bool hasPressedKey = false;
-
+            float input = InputHandler.inputAxis.x;
+            bool hasPressedKey = input != 0;
             Vector3 newPosition = transform.position;
 
-            if (Input.GetKey(KeyCode.A))
-            {
-                newPosition += Vector3.left;
-                hasPressedKey = true;
-            }
-
-            if (Input.GetKey(KeyCode.D))
-            {
-                newPosition += Vector3.right;
-                hasPressedKey = true;
-            }
+            newPosition += Vector3.right * input;
 
             if (hasPressedKey && CanMove(newPosition))
             {
@@ -169,14 +178,16 @@ public class Tetromino : MonoBehaviour
 
         Quaternion newRotation = transform.rotation;
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Q) || InputHandler.rotateDirection < 0)
         {
+            InputHandler.rotateDirection = 0;
             newRotation = Quaternion.Euler(0, 0, 90);
             hasPressedKey = true;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E) || InputHandler.rotateDirection > 0)
         {
+            InputHandler.rotateDirection = 0;
             newRotation = Quaternion.Euler(0, 0, -90);
             hasPressedKey = true;
         }

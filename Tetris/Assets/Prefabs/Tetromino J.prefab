@@ -124,6 +124,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5539260113734003086, guid: 128fe1f336321d644b6794d98d698822, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b2913503bf0fd1a448057461b171b0c2, type: 2}
     - target: {fileID: 6894214222190591401, guid: 128fe1f336321d644b6794d98d698822, type: 3}
       propertyPath: m_Name
       value: BlockPrefab
@@ -206,6 +210,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5539260113734003086, guid: 128fe1f336321d644b6794d98d698822, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b2913503bf0fd1a448057461b171b0c2, type: 2}
     - target: {fileID: 6894214222190591401, guid: 128fe1f336321d644b6794d98d698822, type: 3}
       propertyPath: m_Name
       value: BlockPrefab
@@ -288,6 +296,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5539260113734003086, guid: 128fe1f336321d644b6794d98d698822, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b2913503bf0fd1a448057461b171b0c2, type: 2}
     - target: {fileID: 6894214222190591401, guid: 128fe1f336321d644b6794d98d698822, type: 3}
       propertyPath: m_Name
       value: BlockPrefab
@@ -370,6 +382,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5539260113734003086, guid: 128fe1f336321d644b6794d98d698822, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: b2913503bf0fd1a448057461b171b0c2, type: 2}
     - target: {fileID: 6894214222190591401, guid: 128fe1f336321d644b6794d98d698822, type: 3}
       propertyPath: m_Name
       value: BlockPrefab
