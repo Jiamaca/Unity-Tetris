@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbb29306d4c435d4d83ac3a330175a41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  massCenter: {x: 0, y: 0.5, z: 0}
+  massCenter: {x: 0, y: 0, z: 0}
   moveInterval: 0.1
   fallTime: 0.8
   rotateSound: {fileID: 8300000, guid: 0685c11f671c2a2459cafd29561c4348, type: 3}

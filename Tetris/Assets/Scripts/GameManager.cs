@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     public AudioClip gameOverSound;
 
     private GameObject gameOverMenu;
+    private GameObject mainMenu;
     private GameObject currentScoreText;
     private GameObject nextTetromino;
 
@@ -43,10 +44,12 @@ public class GameManager : MonoBehaviour
         source = GetComponent<AudioSource>();
 
         gameOverMenu = mainCanvas.transform.Find("GameOverMenu").gameObject;
+        mainMenu = mainCanvas.transform.Find("PresentationMenu").gameObject;
         currentScoreText = mainCanvas.transform.Find("ScorePainel/CurrentScoreText").gameObject;
         nextTetrominoMiniature = GameObject.Find("MiniaturePivot").transform;
 
-        SpawnTetromino();
+        //SpawnTetromino();
+        mainMenu.SetActive(true);
     }
 
     public void SpawnTetromino()
@@ -69,6 +72,13 @@ public class GameManager : MonoBehaviour
         miniature.transform.localPosition = Vector3.zero - (t.massCenter * 0.85f);
         miniature.transform.localScale *= 0.85f;
         t.enabled = false;
+    }
+
+    public void StartGame()
+    {
+        Debug.Log("Starting new game...");
+        mainMenu.SetActive(false);
+        SpawnTetromino();
     }
 
     public void GameOver()

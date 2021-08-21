@@ -186,8 +186,14 @@ public class Tetromino : MonoBehaviour
         {
             foreach (Transform child in transform)
             {
+                child.localPosition -= massCenter;
                 Vector3 newBlockPosition = newRotation * child.localPosition;
-                child.transform.localPosition = newBlockPosition;
+                child.localPosition = newBlockPosition + massCenter;
+
+                int newPositionX = Mathf.RoundToInt(child.localPosition.x);
+                int newPositionY = Mathf.RoundToInt(child.localPosition.y);
+
+                child.localPosition = new Vector3(newPositionX, newPositionY, 0);
             }
             gameManager.PlayAudioClip(rotateSound);
         }
@@ -197,10 +203,10 @@ public class Tetromino : MonoBehaviour
     {
         foreach (Transform child in transform)
         {
-            Vector3 newBlockPosition = newRotation * child.localPosition + transform.position;
+            Vector3 newBlockPosition = newRotation * (child.localPosition - massCenter) + transform.position;
 
-            int newPositionX = Mathf.RoundToInt(newBlockPosition.x);
-            int newPositionY = Mathf.RoundToInt(newBlockPosition.y);
+            int newPositionX = Mathf.RoundToInt(newBlockPosition.x + massCenter.x);
+            int newPositionY = Mathf.RoundToInt(newBlockPosition.y + massCenter.y);
 
             if (newPositionX > 9 || newPositionX < 0 || newPositionY < 0)
             {
